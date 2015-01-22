@@ -1,0 +1,24 @@
+{
+  "name": "simple-ajax",
+  "version": "0.0.1",
+  "authors": [
+    "Chris Joel <cdata@google.com>"
+  ],
+  "description": "A library of simple AJAX Polymer components.",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "polymer/polymer#0.8-preview"
+  },
+  "devDependencies": {
+    "webcomponentsjs": "~0.5.2",
+    "web-component-tester": "~2.0.5",
+    "sinonjs": "~1.10.2"
+  }
+}

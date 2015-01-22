@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+  <title>core-ajax</title>
+
+  <script src="../bower_components/webcomponentsjs/webcomponents.js"></script>
+  <script src="../bower_components/web-component-tester/browser.js"></script>
+
+  <link rel="import" href="../bower_components/polymer/polymer.html">
+  <link rel="import" href="../simple-ajax.html">
+
+</head>
+<body>
+  <simple-ajax  id="SimpleGet"
+                url="/responds_to_get_with_json"></simple-ajax>
+  <simple-ajax  id="SimplePost"
+                method="POST"
+                url="/responds_to_post_with_json"></simple-ajax>
+  <script>
+describe('<simple-ajax>', function () {
+  var jsonResponseHeaders = {
+    'Content-Type': 'application/json'
+  };
+  var simpleAjax;
+  var server;
+
+  beforeEach(function () {
+    server = sinon.fakeServer.create();
+    server.respondWith(
+      'GET',
+      '/responds_to_get_with_json',
+      [
+        200,
+        jsonResponseHeaders,
+        '{"success":true}'
+      ]
+    );
+
+    server.respondWith(
+      'POST',
+      '/responds_to_post_with_json',
+      [
+        200,
+        jsonResponseHeaders,
+        '{"post_success":true}'
+      ]
+    );
+
+    simpleAjax = document.getElementById('SimpleGet');
+  });
+
+  afterEach(function () {
+    server.restore();
+  });
+
+  it('comes with sane defaults to support simple GET requests for JSON', function (done) {
+    simpleAjax.send().then(function (response) {
+      expect(response).to.be.ok;
+      expect(response).to.be.an('object');
+      expect(response.success).to.be.equal(true);
+      done();
+    }).catch(function (error) {
+      done(error);
+    });
+
+    server.respond();
+  });
+
+  describe('when data needs to be POSTed', function () {
+    beforeEach(function () {
+      simpleAjax = document.getElementById('SimplePost');
+    });
+
+    it('automatically stringifies objects', function (done) {
+      var requestBody = { foo: 'bar' };
+      var request;
+
+      simpleAjax.send(requestBody).then(function (response) {
+        expect(response).to.be.ok;
+        expect(response).to.be.an('object');
+        expect(response.post_success).to.be.equal(true);
+        expect(request.requestBody).to.be.equal(JSON.stringify(requestBody));
+        done();
+      }).catch(function (error) {
+        done(error);
+      });
+
+      request = server.requests[0];
+
+      server.respond();
+    });
+  });
+
+  // TODO: Post form data
+});
+  </script>
+
+</body>
+</html>

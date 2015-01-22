@@ -1,0 +1,101 @@
+<template></template>
+<script>
+Polymer({
+  is: 'simple-ajax',
+
+  published: {
+    url: String,
+    method: String,
+    requestHeaders: Object,
+    async: Number
+  },
+
+  async: 1,
+
+  method: 'GET',
+
+  requestHeaders: null,
+
+  responseType: 'json',
+
+  created: function () {
+    this.requestHeaders = this.requestHeaders || {};
+  },
+
+  send: function (data) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      var onLoad = function () {
+        var response;
+
+        try {
+          response = this.parseResponse(
+            xhr.response || xhr.responseText
+          )
+        } catch (e) {
+          reject(e);
+        }
+
+        resolve(response);
+      }.bind(this);
+      var onError = function (e) {
+        reject(e);
+      };
+      var onAbort = function () {
+        reject();
+      };
+
+      xhr.addEventListener('load', onLoad);
+      xhr.addEventListener('error', onError);
+      xhr.addEventListener('abort', onAbort);
+
+      xhr.open(
+        this.method,
+        this.url,
+        !!this.async
+      );
+
+      Object.keys(this.requestHeaders).forEach(function (requestHeader) {
+        xhr.setRequestHeader(
+          requestHeader,
+          this.requestHeaders[requestHeader]
+        );
+      }, this);
+
+      xhr.responseType = this.responseType;
+
+      xhr.send(
+        this.stringifyData(data)
+      );
+    }.bind(this));
+  },
+
+  parseResponse: function (response) {
+    if (this.responseType === 'json') {
+      if (typeof response === 'string') {
+        return JSON.parse(response);
+      }
+    }
+
+    return response;
+  },
+
+  stringifyData: function (data) {
+    if (data === null || data === undefined) {
+      return;
+    }
+
+    if (typeof data === 'string') {
+      return data;
+    }
+
+    if (typeof data === 'object') {
+      return JSON.stringify(data);
+    }
+
+    if ('toString' in data && typeof data.toString === 'function') {
+      return data.toString();
+    }
+  }
+});
+</script>
