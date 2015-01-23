@@ -1,0 +1,37 @@
+<script src="migration-helper.js"></script>
+<script>
+Polymer({
+  is: 'simple-request',
+
+  published: {
+    xhr: {
+      type: Object,
+      readOnly: true
+    },
+
+    completes: {
+      type: Promise,
+      readOnly: true
+    }
+  },
+
+  ready: function () {
+    this.xhr = new XMLHttpRequest();
+    this.completes = new Promise(function (resolve, reject) {
+      this.resolveCompletes = resolve;
+      this.rejectCompletes = reject;
+    }.bind(this));
+  },
+
+  send: function (options) {
+    if (this.xhr.readyState > 0) {
+      return;
+    }
+  },
+
+  abort: function () {
+    this.xhr.abort();
+    this.rejectCompletes(new Error('Request aborted.'));
+  }
+});
+</script>

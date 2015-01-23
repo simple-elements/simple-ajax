@@ -1,4 +1,5 @@
-<template></template>
+<link rel="import" href="simple-request.html">
+<script src="migration-helper.js"></script>
 <script>
 Polymer({
   is: 'simple-ajax',
@@ -6,20 +7,30 @@ Polymer({
   published: {
     url: String,
     method: String,
-    requestHeaders: Object,
-    async: Number
+    body: String,
+    async: Boolean,
+    headers: Object,
+    handleas: String,
+    auto: Boolean,
+    activeRequests: {
+      type: Number,
+      readOnly: true
+    }
   },
 
-  async: 1,
+  defaults: {
+    url: '',
+    method: 'GET',
+    body: undefined,
+    async: true,
+    headers: {},
+    handleas: 'json',
+    auto: false,
+    activeRequests: 0
+  },
 
-  method: 'GET',
-
-  requestHeaders: null,
-
-  responseType: 'json',
-
-  created: function () {
-    this.requestHeaders = this.requestHeaders || {};
+  ready: function () {
+    Polymerfill.configure(this);
   },
 
   send: function (data) {
