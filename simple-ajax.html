@@ -1,112 +1,88 @@
 <link rel="import" href="simple-request.html">
-<script src="migration-helper.js"></script>
 <script>
-Polymer({
-  is: 'simple-ajax',
+(function () {
+  var Polymerfill = {
+    configure: function (target) {
+      var defaults = target.defaults || {};
 
-  published: {
-    url: String,
-    method: String,
-    body: String,
-    async: Boolean,
-    headers: Object,
-    handleas: String,
-    auto: Boolean,
-    activeRequests: {
-      type: Number,
-      readOnly: true
-    }
-  },
+      Object.keys(defaults).forEach(function (key) {
+        var value = defaults[key];
 
-  defaults: {
-    url: '',
-    method: 'GET',
-    body: undefined,
-    async: true,
-    headers: {},
-    handleas: 'json',
-    auto: false,
-    activeRequests: 0
-  },
-
-  ready: function () {
-    Polymerfill.configure(this);
-  },
-
-  send: function (data) {
-    return new Promise(function (resolve, reject) {
-      var xhr = new XMLHttpRequest();
-      var onLoad = function () {
-        var response;
-
-        try {
-          response = this.parseResponse(
-            xhr.response || xhr.responseText
-          )
-        } catch (e) {
-          reject(e);
+        if (Array.isArray(value)) {
+          value = value.slice();
+        } else if (value instanceof Object) {
+          value = Object.create(value);
         }
 
-        resolve(response);
-      }.bind(this);
-      var onError = function (e) {
-        reject(e);
-      };
-      var onAbort = function () {
-        reject();
-      };
+        if (target[key] === undefined) {
+          target[key] = value;
+        }
+      });
+    }
+  };
 
-      xhr.addEventListener('load', onLoad);
-      xhr.addEventListener('error', onError);
-      xhr.addEventListener('abort', onAbort);
+  Polymer({
+    is: 'simple-ajax',
 
-      xhr.open(
-        this.method,
-        this.url,
-        !!this.async
-      );
-
-      Object.keys(this.requestHeaders).forEach(function (requestHeader) {
-        xhr.setRequestHeader(
-          requestHeader,
-          this.requestHeaders[requestHeader]
-        );
-      }, this);
-
-      xhr.responseType = this.responseType;
-
-      xhr.send(
-        this.stringifyData(data)
-      );
-    }.bind(this));
-  },
-
-  parseResponse: function (response) {
-    if (this.responseType === 'json') {
-      if (typeof response === 'string') {
-        return JSON.parse(response);
+    published: {
+      url: String,
+      method: String,
+      headers: Object,
+      body: String,
+      async: Boolean,
+      handleas: String,
+      auto: Boolean,
+      withcredentials: Boolean,
+      activeRequests: {
+        type: Number,
+        readOnly: true
       }
-    }
+    },
 
-    return response;
-  },
+    defaults: {
+      url: '',
+      method: 'GET',
+      handleas: 'json',
+      body: undefined,
+      async: true,
+      headers: {},
+      auto: false,
+      withcredentials: false,
+      activeRequests: 0
+    },
 
-  stringifyData: function (data) {
-    if (data === null || data === undefined) {
-      return;
-    }
+    toAjaxOptions: function () {
+      return {
+        url: this.url,
+        method: this.method,
+        headers: Object.create(this.headers),
+        body: this.body,
+        async: this.async,
+        handleAs: this.handleas,
+        withCredentials: this.withcredentials
+      }
+    },
 
-    if (typeof data === 'string') {
-      return data;
-    }
+    ready: function () {
+      Polymerfill.configure(this);
+    },
 
-    if (typeof data === 'object') {
-      return JSON.stringify(data);
-    }
+    generateRequest: function () {
+      var request = document.createElement('simple-request');
+      var removeRequest = function () {
+        try {
+          this.localDOM.removeChild(request);
+        } catch(e) {}
+      }.bind(this);
 
-    if ('toString' in data && typeof data.toString === 'function') {
-      return data.toString();
+      this.localDOM.appendChild(request);
+
+      request.completes.then(removeRequest, removeRequest);
+
+      request.send(this.toAjaxOptions());
+
+      return request;
     }
-  }
-});
+  });
+})();
 </script>

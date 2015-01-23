@@ -1,4 +1,3 @@
-<script src="migration-helper.js"></script>
 <script>
 Polymer({
   is: 'simple-request',
@@ -9,10 +8,15 @@ Polymer({
       readOnly: true
     },
 
+    response: {
+      type: Object,
+      readOnly: true
+    },
+
     completes: {
       type: Promise,
       readOnly: true
-    }
+    },
   },
 
   ready: function () {
@@ -23,15 +27,71 @@ Polymer({
     }.bind(this));
   },
 
-  send: function (options) {
-    if (this.xhr.readyState > 0) {
+  send: function (ajaxOptions) {
+    var xhr = this.xhr;
+
+    if (xhr.readyState > 0) {
       return;
+    }
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        this.response = this.parseResponse();
+        this.resolveCompletes(this.response);
+      }
+    }.bind(this);
+
+    xhr.onerror = function (e) {
+      this.rejectCompletes(e)
+    }.bind(this);
+
+    xhr.onabort = function () {
+      this.rejectCompletes(new Error('Request aborted.'));
+    }.bind(this);
+
+    xhr.open(
+      ajaxOptions.method,
+      ajaxOptions.url,
+      ajaxOptions.async
+    );
+
+    Object.keys(ajaxOptions.headers).forEach(function (requestHeader) {
+      xhr.setRequestHeader(
+        requestHeader,
+        ajaxOptions.headers[requestHeader]
+      );
+    }, this);
+
+    xhr.responseType = ajaxOptions.handleAs;
+    xhr.withCredentials = ajaxOptions.withCredentials;
+
+    xhr.send(ajaxOptions.body);
+  },
+
+  parseResponse: function () {
+    var xhr = this.xhr;
+
+    try {
+      switch (xhr.responseType) {
+        case 'json':
+          return JSON.parse(xhr.responseText);
+        case 'xml':
+          return xhr.responseXML;
+        case 'blob':
+        case 'document':
+        case 'arraybuffer':
+          return xhr.response;
+        case 'text':
+        default:
+          return xhr.responseText;
+      }
+    } catch (e) {
+      this.rejectCompletes(new Error('Could not parse response. ' + e.message));
     }
   },
 
   abort: function () {
     this.xhr.abort();
-    this.rejectCompletes(new Error('Request aborted.'));
   }
 });
 </script>
