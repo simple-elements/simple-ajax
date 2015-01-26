@@ -5,32 +5,33 @@
 
   <script src="../bower_components/webcomponentsjs/webcomponents.js"></script>
   <script src="../bower_components/web-component-tester/browser.js"></script>
+  <script src="../bower_components/simple-fixture/simple-fixture-mocha.js"></script>
 
   <link rel="import" href="../bower_components/polymer/polymer.html">
-  <link rel="import" href="../test-fixture.html">
+  <link rel="import" href="../bower_components/simple-fixture/simple-fixture.html">
   <link rel="import" href="../simple-ajax.html">
 </head>
 <body>
-  <test-fixture>
+  <simple-fixture id="SimpleGet">
     <template>
-      <simple-ajax  id="SimpleGet"
-                    url="/responds_to_get_with_json"></simple-ajax>
-      <simple-ajax  id="SimplePost"
-                    method="POST"
-                    url="/responds_to_post_with_json"></simple-ajax>
+      <simple-ajax url="/responds_to_get_with_json"></simple-ajax>
     </template>
-  </test-fixture>
+  </simple-fixture>
+  <simple-fixture id="SimplePost">
+    <template>
+      <simple-ajax method="POST"
+                   url="/responds_to_post_with_json"></simple-ajax>
+    </template>
+  </simple-fixture>
   <script>
 describe('<simple-ajax>', function () {
   var jsonResponseHeaders = {
     'Content-Type': 'application/json'
   };
-  var testFixture = document.getElementsByTagName('test-fixture')[0];
   var simpleAjax;
   var server;
 
   beforeEach(function () {
-    testFixture.create();
     server = sinon.fakeServer.create();
     server.respondWith(
       'GET',
@@ -52,11 +53,10 @@ describe('<simple-ajax>', function () {
       ]
     );
 
-    simpleAjax = document.getElementById('SimpleGet');
+    simpleAjax = fixture('SimpleGet');
   });
 
   afterEach(function () {
-    testFixture.restore();
     server.restore();
   });
 
@@ -90,34 +90,22 @@ describe('<simple-ajax>', function () {
     server.respond();
   });
 
-  /*
-  describe('when data needs to be POSTed', function () {
+  describe('when making POST requests', function () {
     beforeEach(function () {
-      simpleAjax = document.getElementById('SimplePost');
+      simpleAjax = fixture('SimplePost');
     });
 
-    it('automatically stringifies objects', function (done) {
-      var requestBody = { foo: 'bar' };
-      var request;
+    it('it POSTs the value of the `body` attribute', function () {
+      var requestBody = JSON.stringify({foo: 'bar'});
 
-      simpleAjax.send(requestBody).then(function (response) {
-        expect(response).to.be.ok;
-        expect(response).to.be.an('object');
-        expect(response.post_success).to.be.equal(true);
-        expect(request.requestBody).to.be.equal(JSON.stringify(requestBody));
-        done();
-      }).catch(function (error) {
-        done(error);
-      });
+      simpleAjax.body = requestBody;
 
-      request = server.requests[0];
+      simpleAjax.generateRequest();
 
-      server.respond();
+      expect(server.requests[0]).to.be.ok;
+      expect(server.requests[0].requestBody).to.be.equal(requestBody);
     });
   });
-  */
-
-  // TODO: Post form data
 });
   </script>
 

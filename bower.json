@@ -19,6 +19,7 @@
   "devDependencies": {
     "webcomponentsjs": "~0.5.2",
     "web-component-tester": "~2.0.5",
-    "sinonjs": "~1.10.2"
+    "sinonjs": "~1.10.2",
+    "simple-fixture": "simple-elements/simple-fixture"
   }
 }
