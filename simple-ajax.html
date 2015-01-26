@@ -69,15 +69,15 @@
 
     generateRequest: function () {
       var request = document.createElement('simple-request');
-      var removeRequest = function () {
+      var removeRequestElement = function () {
         try {
-          this.localDOM.removeChild(request);
+          this.localDom.removeChild(request);
         } catch(e) {}
       }.bind(this);
 
-      this.localDOM.appendChild(request);
+      this.localDom.appendChild(request);
 
-      request.completes.then(removeRequest, removeRequest);
+      request.completes.then(removeRequestElement, removeRequestElement);
 
       request.send(this.toAjaxOptions());
 

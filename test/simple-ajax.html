@@ -7,24 +7,30 @@
   <script src="../bower_components/web-component-tester/browser.js"></script>
 
   <link rel="import" href="../bower_components/polymer/polymer.html">
+  <link rel="import" href="../test-fixture.html">
   <link rel="import" href="../simple-ajax.html">
-
 </head>
 <body>
-  <simple-ajax  id="SimpleGet"
-                url="/responds_to_get_with_json"></simple-ajax>
-  <simple-ajax  id="SimplePost"
-                method="POST"
-                url="/responds_to_post_with_json"></simple-ajax>
+  <test-fixture>
+    <template>
+      <simple-ajax  id="SimpleGet"
+                    url="/responds_to_get_with_json"></simple-ajax>
+      <simple-ajax  id="SimplePost"
+                    method="POST"
+                    url="/responds_to_post_with_json"></simple-ajax>
+    </template>
+  </test-fixture>
   <script>
 describe('<simple-ajax>', function () {
   var jsonResponseHeaders = {
     'Content-Type': 'application/json'
   };
+  var testFixture = document.getElementsByTagName('test-fixture')[0];
   var simpleAjax;
   var server;
 
   beforeEach(function () {
+    testFixture.create();
     server = sinon.fakeServer.create();
     server.respondWith(
       'GET',
@@ -50,11 +56,29 @@ describe('<simple-ajax>', function () {
   });
 
   afterEach(function () {
+    testFixture.restore();
     server.restore();
   });
 
+  it('generates simple-request elements based on a declarative configuration', function () {
+    var request;
+
+    request = simpleAjax.generateRequest();
+
+    expect(request.xhr.method).to.be.equal('GET');
+
+    simpleAjax.method = 'POST';
+    simpleAjax.url = '/responds_to_post_with_json';
+
+    request = simpleAjax.generateRequest();
+
+    expect(request.xhr.method).to.be.equal('POST');
+  });
+
   it('comes with sane defaults to support simple GET requests for JSON', function (done) {
-    simpleAjax.send().then(function (response) {
+    var request = simpleAjax.generateRequest();
+
+    request.completes.then(function (response) {
       expect(response).to.be.ok;
       expect(response).to.be.an('object');
       expect(response.success).to.be.equal(true);
@@ -66,6 +90,7 @@ describe('<simple-ajax>', function () {
     server.respond();
   });
 
+  /*
   describe('when data needs to be POSTed', function () {
     beforeEach(function () {
       simpleAjax = document.getElementById('SimplePost');
@@ -90,6 +115,7 @@ describe('<simple-ajax>', function () {
       server.respond();
     });
   });
+  */
 
   // TODO: Post form data
 });
