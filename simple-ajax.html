@@ -33,6 +33,15 @@
       handleas: String,
       auto: Boolean,
       withcredentials: Boolean,
+      verbose: Boolean,
+      lastRequest: {
+        type: Object,
+        readyOnly: true
+      },
+      lastResponse: {
+        type: Object,
+        readOnly: true
+      },
       activeRequests: {
         type: Number,
         readOnly: true
@@ -48,7 +57,24 @@
       headers: {},
       auto: false,
       withcredentials: false,
+      verbose: false,
+      lastRequest: undefined,
+      lastResponse: undefined,
       activeRequests: 0
+    },
+
+    bind: {
+      url: 'ajaxOptionsChanged',
+      method: 'ajaxOptionsChanged',
+      headers: 'ajaxOptionsChanged',
+      body: 'ajaxOptionsChanged',
+      async: 'ajaxOptionsChanged',
+      handleas: 'ajaxOptionsChanged',
+      withcredentials: 'ajaxOptionsChanged'
+    },
+
+    ready: function () {
+      Polymerfill.configure(this);
     },
 
     toAjaxOptions: function () {
@@ -63,25 +89,54 @@
       }
     },
 
-    ready: function () {
-      Polymerfill.configure(this);
+    ajaxOptionsChanged: function () {
+      if (this.auto) {
+        this.generateRequest();
+      }
     },
 
     generateRequest: function () {
       var request = document.createElement('simple-request');
-      var removeRequestElement = function () {
-        try {
-          this.localDom.removeChild(request);
-        } catch(e) {}
-      }.bind(this);
+      var ajaxOptions = this.toAjaxOptions();
 
       this.localDom.appendChild(request);
 
-      request.completes.then(removeRequestElement, removeRequestElement);
+      request.completes.then(
+        this.handleResponse.bind(this),
+        this.handleError.bind(this)
+      ).then(
+        this.discardRequest.bind(this, request)
+      );
 
-      request.send(this.toAjaxOptions());
+      request.send(ajaxOptions);
+
+      this.lastRequest = request;
+
+      this.fire('request', {
+        element: request,
+        options: ajaxOptions
+      });
 
       return request;
+    },
+
+    handleResponse: function (response) {
+      this.lastResponse = response;
+      this.fire('response', response);
+    },
+
+    handleError: function (error) {
+      if (this.verbose) {
+        console.error(error);
+      }
+
+      this.fire('error', error);
+    },
+
+    discardRequest: function (request) {
+      try {
+        this.localDom.removeChild(request);
+      } catch (e) {}
     }
   });
 })();

@@ -12,12 +12,17 @@
   <link rel="import" href="../simple-ajax.html">
 </head>
 <body>
-  <simple-fixture id="SimpleGet">
+  <script>
+    function foo () {
+      debugger;
+    }
+  </script>
+  <simple-fixture id="TrivialGet">
     <template>
       <simple-ajax url="/responds_to_get_with_json"></simple-ajax>
     </template>
   </simple-fixture>
-  <simple-fixture id="SimplePost">
+  <simple-fixture id="TrivialPost">
     <template>
       <simple-ajax method="POST"
                    url="/responds_to_post_with_json"></simple-ajax>
@@ -29,6 +34,7 @@ describe('<simple-ajax>', function () {
     'Content-Type': 'application/json'
   };
   var simpleAjax;
+  var request;
   var server;
 
   beforeEach(function () {
@@ -53,57 +59,109 @@ describe('<simple-ajax>', function () {
       ]
     );
 
-    simpleAjax = fixture('SimpleGet');
+    simpleAjax = fixture('TrivialGet');
   });
 
   afterEach(function () {
     server.restore();
   });
 
-  it('generates simple-request elements based on a declarative configuration', function () {
-    var request;
+  describe('when making simple GET requests for JSON', function () {
+    it('has sane defaults that love you', function () {
+      request = simpleAjax.generateRequest();
 
-    request = simpleAjax.generateRequest();
+      server.respond();
 
-    expect(request.xhr.method).to.be.equal('GET');
-
-    simpleAjax.method = 'POST';
-    simpleAjax.url = '/responds_to_post_with_json';
-
-    request = simpleAjax.generateRequest();
-
-    expect(request.xhr.method).to.be.equal('POST');
+      expect(request.response).to.be.ok;
+      expect(request.response).to.be.an('object');
+      expect(request.response.success).to.be.equal(true);
+    });
   });
 
-  it('comes with sane defaults to support simple GET requests for JSON', function (done) {
-    var request = simpleAjax.generateRequest();
+  describe('when properties are changed', function () {
+    it('generates simple-request elements that reflect the change', function () {
+      request = simpleAjax.generateRequest();
 
-    request.completes.then(function (response) {
-      expect(response).to.be.ok;
-      expect(response).to.be.an('object');
-      expect(response.success).to.be.equal(true);
-      done();
-    }).catch(function (error) {
-      done(error);
+      expect(request.xhr.method).to.be.equal('GET');
+
+      simpleAjax.method = 'POST';
+      simpleAjax.url = '/responds_to_post_with_json';
+
+      request = simpleAjax.generateRequest();
+
+      expect(request.xhr.method).to.be.equal('POST');
+    });
+  });
+
+  describe('the last response', function () {
+    beforeEach(function () {
+      request = simpleAjax.generateRequest();
+      server.respond();
     });
 
-    server.respond();
+    it('is accessible as a readonly property', function (done) {
+      request.completes.then(function (response) {
+        expect(simpleAjax.lastResponse).to.be.equal(response);
+        done();
+      }).catch(done);
+    });
+
+    it('updates with each new response', function (done) {
+      request.completes.then(function (response) {
+
+        expect(response).to.be.an('object');
+        expect(simpleAjax.lastResponse).to.be.equal(response);
+
+        simpleAjax.handleas = 'text';
+        request = simpleAjax.generateRequest();
+
+        return request.completes;
+
+      }).then(function (response) {
+
+        expect(response).to.be.a('string');
+        expect(simpleAjax.lastResponse).to.be.equal(response);
+
+        done();
+
+      }).catch(done);
+    });
   });
 
   describe('when making POST requests', function () {
     beforeEach(function () {
-      simpleAjax = fixture('SimplePost');
+      simpleAjax = fixture('TrivialPost');
     });
 
-    it('it POSTs the value of the `body` attribute', function () {
+    it('POSTs the value of the `body` attribute', function () {
       var requestBody = JSON.stringify({foo: 'bar'});
 
       simpleAjax.body = requestBody;
-
       simpleAjax.generateRequest();
 
       expect(server.requests[0]).to.be.ok;
       expect(server.requests[0].requestBody).to.be.equal(requestBody);
+    });
+  });
+
+  describe('when a response handler is bound', function () {
+    var responseHandler;
+
+    beforeEach(function () {
+      responseHandler = sinon.spy();
+      simpleAjax.addEventListener('response', responseHandler);
+    });
+
+    it('calls the handler after every response', function (done) {
+      simpleAjax.generateRequest();
+      simpleAjax.generateRequest();
+
+      server.respond();
+
+      simpleAjax.lastRequest.completes.then(function () {
+        expect(responseHandler.callCount).to.be.equal(2);
+        done();
+      }).catch(done);
     });
   });
 });
