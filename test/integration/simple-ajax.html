@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <title>core-ajax</title>
+
+  <script src="../../bower_components/webcomponentsjs/webcomponents.js"></script>
+  <script src="../../bower_components/web-component-tester/browser.js"></script>
+  <script src="../../bower_components/simple-fixture/simple-fixture-mocha.js"></script>
+
+  <link rel="import" href="../../bower_components/polymer/polymer.html">
+  <link rel="import" href="../../bower_components/simple-fixture/simple-fixture.html">
+  <link rel="import" href="../../simple-ajax.html">
+  <link rel="import" href="dhtml-view.html">
+</head>
+<body>
+  <dhtml-view id="View"></dhtml-view>
+  <simple-fixture id="TrivialView">
+    <template>
+      <dhtml-view></dhtml-view>
+    </template>
+  </simple-fixture>
+  <script>
+describe('<simple-ajax>', function () {
+  var server;
+  var view;
+
+  beforeEach(function () {
+    server = sinon.fakeServer.create();
+    server.respondWith(
+      'GET',
+      '/fake_resource/alpha',
+      [
+        200,
+        jsonResponseHeaders,
+        'Resource Alpha'
+      ]
+    );
+
+    server.respondWith(
+      'POST',
+      '/fake_resource/omega',
+      [
+        200,
+        jsonResponseHeaders,
+        'Resource Omega'
+      ]
+    );
+
+    view = fixture('TrivialView');
+  });
+
+  afterEach(function () {
+    server.restore();
+  });
+
+  xit('does things', function () {
+  });
+});
+  </script>
+
+</body>
+</html>

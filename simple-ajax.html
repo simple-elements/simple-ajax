@@ -81,7 +81,7 @@
       return {
         url: this.url,
         method: this.method,
-        headers: Object.create(this.headers),
+        headers: Object.create(this.headers || {}),
         body: this.body,
         async: this.async,
         handleAs: this.handleas,

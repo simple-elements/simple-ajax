@@ -1,0 +1,27 @@
+<template>
+  <button on-click="onClickAlpha">Alpha</button>
+  <button on-click="onClickOmega">Omega</button>
+  <simple-ajax id="Ajax" handleas="text" auto></simple-ajax>
+  <div id="Output">{{$.ajax.lastResponse}}</div>
+</template>
+<script>
+Polymer({
+  is: 'dhtml-view',
+
+  foo: function () {
+    console.log('foo');
+  },
+
+  bar: function () {
+    console.log('bar');
+  },
+
+  onClickAlpha: function () {
+    this.$.Ajax.url = '/fake_resource/alpha';
+  },
+
+  onClickOmega: function () {
+    this.$.Ajax.url = '/fake_resource/omega';
+  }
+})
+</script>
