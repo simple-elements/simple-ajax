@@ -38,18 +38,17 @@
       auto: Boolean,
       withcredentials: Boolean,
       verbose: Boolean,
-      lastrequest: {
+      lastRequest: {
         type: Object,
-        readyOnly: true,
-        notify: true
-      },
-      lastresponse: {
-        type: Object,
-        notify: true
-      },
-      activerequests: {
-        type: Number,
         readOnly: true,
+        notify: true
+      },
+      lastResponse: {
+        type: Object,
+        notify: true
+      },
+      activeRequests: {
+        type: Number,
         notify: true
       }
     },
@@ -64,9 +63,9 @@
       auto: false,
       withcredentials: false,
       verbose: false,
-      lastrequest: undefined,
-      lastresponse: undefined,
-      activerequests: 0
+      lastRequest: undefined,
+      lastResponse: undefined,
+      activeRequests: 0
     },
 
     bind: {
@@ -92,7 +91,7 @@
         async: this.async,
         handleAs: this.handleas,
         withCredentials: this.withcredentials
-      }
+      };
     },
 
     ajaxOptionsChanged: function () {
@@ -116,7 +115,8 @@
 
       request.send(ajaxOptions);
 
-      this.lastrequest = request;
+      this.lastRequest = request;
+      this.activeRequests = this.numberOfRequestElements;
 
       this.fire('request', {
         xhr: request.xhr,
@@ -127,7 +127,7 @@
     },
 
     handleResponse: function (response) {
-      this.lastresponse = response;
+      this.lastResponse = response;
       this.fire('response', response);
     },
 
@@ -143,6 +143,12 @@
       try {
         this.localDom.removeChild(request);
       } catch (e) {}
+
+      this.activeRequests = this.numberOfRequestElements;
+    },
+
+    get numberOfRequestElements () {
+      return this.localDom.querySelectorAll('simple-request').length;
     }
   });
 })();
