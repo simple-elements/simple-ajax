@@ -14,10 +14,14 @@
           value = Object.create(value);
         }
 
-        if (target[key] === undefined) {
+        if (target[key] === false  && !target.hasAttribute(key)) {
+          target[key] = value;
+        } else if (target[key] === undefined) {
           target[key] = value;
         }
       });
+
+      target.configured = true;
     }
   };
 
@@ -34,17 +38,19 @@
       auto: Boolean,
       withcredentials: Boolean,
       verbose: Boolean,
-      lastRequest: {
+      lastrequest: {
         type: Object,
-        readyOnly: true
+        readyOnly: true,
+        notify: true
       },
-      lastResponse: {
+      lastresponse: {
         type: Object,
-        readOnly: true
+        notify: true
       },
-      activeRequests: {
+      activerequests: {
         type: Number,
-        readOnly: true
+        readOnly: true,
+        notify: true
       }
     },
 
@@ -58,9 +64,9 @@
       auto: false,
       withcredentials: false,
       verbose: false,
-      lastRequest: undefined,
-      lastResponse: undefined,
-      activeRequests: 0
+      lastrequest: undefined,
+      lastresponse: undefined,
+      activerequests: 0
     },
 
     bind: {
@@ -90,7 +96,7 @@
     },
 
     ajaxOptionsChanged: function () {
-      if (this.auto) {
+      if (this.auto && this.lightDom && this.localDom && this.configured) {
         this.generateRequest();
       }
     },
@@ -110,10 +116,10 @@
 
       request.send(ajaxOptions);
 
-      this.lastRequest = request;
+      this.lastrequest = request;
 
       this.fire('request', {
-        element: request,
+        xhr: request.xhr,
         options: ajaxOptions
       });
 
@@ -121,7 +127,7 @@
     },
 
     handleResponse: function (response) {
-      this.lastResponse = response;
+      this.lastresponse = response;
       this.fire('response', response);
     },
 

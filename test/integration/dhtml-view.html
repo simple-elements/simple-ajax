@@ -1,27 +1,38 @@
 <template>
-  <button on-click="onClickAlpha">Alpha</button>
-  <button on-click="onClickOmega">Omega</button>
-  <simple-ajax id="Ajax" handleas="text" auto></simple-ajax>
-  <div id="Output">{{$.ajax.lastResponse}}</div>
+  <simple-ajax id="Ajax"
+               handleas="text"
+               auto
+               on-response="updateContent"></simple-ajax>
+  <div id="Output">{{content}}</div>
 </template>
 <script>
 Polymer({
   is: 'dhtml-view',
 
-  foo: function () {
-    console.log('foo');
+  published: {
+    alphaurl: String,
+    omegaurl: String,
+    content: {
+      type: String,
+      notify: true
+    }
   },
 
-  bar: function () {
-    console.log('bar');
+  ready: function () {
+    this.content = 'foo';
   },
 
-  onClickAlpha: function () {
-    this.$.Ajax.url = '/fake_resource/alpha';
+  requestAlpha: function () {
+    this.$.Ajax.url = this.alphaurl;
   },
 
-  onClickOmega: function () {
-    this.$.Ajax.url = '/fake_resource/omega';
+  requestOmega: function () {
+    this.$.Ajax.url = this.omegaurl;
+  },
+
+  updateContent: function () {
+    console.log('LAST RESPONSE CHANGED');
+    this.content = this.$.Ajax.lastresponse;
   }
 })
 </script>

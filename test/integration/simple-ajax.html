@@ -13,10 +13,10 @@
   <link rel="import" href="dhtml-view.html">
 </head>
 <body>
-  <dhtml-view id="View"></dhtml-view>
   <simple-fixture id="TrivialView">
     <template>
-      <dhtml-view></dhtml-view>
+      <dhtml-view alphaurl="/fake_resource/alpha"
+                  omegaurl="/fake_resource/omega"></dhtml-view>
     </template>
   </simple-fixture>
   <script>
@@ -31,17 +31,17 @@ describe('<simple-ajax>', function () {
       '/fake_resource/alpha',
       [
         200,
-        jsonResponseHeaders,
+        {},
         'Resource Alpha'
       ]
     );
 
     server.respondWith(
-      'POST',
+      'GET',
       '/fake_resource/omega',
       [
         200,
-        jsonResponseHeaders,
+        {},
         'Resource Omega'
       ]
     );
@@ -53,7 +53,16 @@ describe('<simple-ajax>', function () {
     server.restore();
   });
 
-  xit('does things', function () {
+  it('does things', function () {
+    view.requestAlpha();
+    server.respond();
+
+    expect(view.innerText.trim()).to.be.equal('Resource Alpha');
+
+    view.requestOmega();
+    server.respond();
+
+    expect(view.innerText.trim()).to.be.equal('Resource Omega');
   });
 });
   </script>
